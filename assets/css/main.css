@@ -48,6 +48,14 @@
 	body {
 		-webkit-text-size-adjust: none;
 	}
+    
+    #Layer1 {
+	position:fixed;
+	bottom:70px;
+	z-index:1;
+	right: 50px;
+}
+
 
 /* Box Model */
 
