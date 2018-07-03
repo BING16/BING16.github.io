@@ -31,12 +31,12 @@
 	 <h2>安装系统与SSH、VNC连接</h2>
      <p>2018.06.30：</p>
 	 <ol>
-	<li><p>&nbsp;在树莓派官网https://www.raspberrypi.org/下载Raspbian系统映像。</br>据b站up主的提醒及之前安装失败的经验，目前其他系统似乎不支持新出的Pi3B+。</p></li>
-	<li><p>&nbsp;借助Win32DiskImager烧录至SD卡，注意烧录好后添加空白的SSH文件以便之后用电脑连接。</br>具体过程参考https://blog.csdn.net/github_38111866/article/details/76038665</p></li>
-	<li><p>&nbsp;网线连接树莓派和笔记本，将笔记本的网络共享给树莓派。之后在Windows的cmd命令窗口输入arp -a找到树莓派的IP地址。通过Xshell连接树莓派，用户名为pi，密码为raspberry。</br>具体过程参考https://jingyan.baidu.com/article/adc81513a267c7f723bf7384.html</p></li>
-	<li><p>&nbsp;修改软件源为国内软件源，文件地址为/etc/apt/sources.list。vi编辑器进入后输入i回车即可编辑内容，按Esc后退出内容编辑，而后输入:并回车进入命令行，输入wq回车即可保存并推出vi，若输入q!则不保存直接退出。</br>软件源地址参考网站自https://www.cnblogs.com/xiaowuyi/p/4012069.html</br>vi使用方法参考自https://blog.csdn.net/xie_xiansheng/article/details/78413306</p></li>
-	<li><p>&nbsp;安装vncserver,并开启Raspbian的VNC Server。</br>参考https://blog.csdn.net/lingyou37/article/details/23671687/及https://blog.csdn.net/u012952807/article/details/70225700</p></li>
-	<li><p>&nbsp;完成连接。</p></li>
+	<li><p>在树莓派官网https://www.raspberrypi.org/下载Raspbian系统映像。</br>据b站up主的提醒及之前安装失败的经验，目前其他系统似乎不支持新出的Pi3B+。</p></li>
+	<li><p>借助Win32DiskImager烧录至SD卡，注意烧录好后添加空白的SSH文件以便之后用电脑连接。</br>具体过程参考https://blog.csdn.net/github_38111866/article/details/76038665</p></li>
+	<li><p>网线连接树莓派和笔记本，将笔记本的网络共享给树莓派。之后在Windows的cmd命令窗口输入arp -a找到树莓派的IP地址。通过Xshell连接树莓派，用户名为pi，密码为raspberry。</br>具体过程参考https://jingyan.baidu.com/article/adc81513a267c7f723bf7384.html</p></li>
+	<li><p>修改软件源为国内软件源，文件地址为/etc/apt/sources.list。vi编辑器进入后输入i回车即可编辑内容，按Esc后退出内容编辑，而后输入:并回车进入命令行，输入wq回车即可保存并推出vi，若输入q!则不保存直接退出。</br>软件源地址参考网站自https://www.cnblogs.com/xiaowuyi/p/4012069.html</br>vi使用方法参考自https://blog.csdn.net/xie_xiansheng/article/details/78413306</p></li>
+	<li><p>安装vncserver,并开启Raspbian的VNC Server。</br>参考https://blog.csdn.net/lingyou37/article/details/23671687/及https://blog.csdn.net/u012952807/article/details/70225700</p></li>
+	<li><p>完成连接。</p></li>
 	</ol>
 	<img src="MyRPi/首次连接vnc.PNG" height="420" title="首次连接vnc">
 	<p>之后进行修改时区、分辨率及相关系统美化等操作，相关的参考网址：</br>
