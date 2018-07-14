@@ -95,7 +95,7 @@ for i in range(1):                             #发送1封，上面的列表是�
 	</pre>
 	<h2>修改以上代码后借助Python3自动发送ip地址</h2>
 	<p>2018.07.13： </p>
-	<p>Python代码为</p>
+	<p>Python代码为（ip地址未切片版）</p>
 	<pre>
 #!\usr\bin\env python
 #-*-coding: utf-8-*-
@@ -104,9 +104,7 @@ import time
 import smtplib
 import urllib
 import urllib.request
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
 
 #发送邮件的基本函数，参数依次如下
 # smtp服务器地址、邮箱用户名，邮箱秘密，发件人地址，收件地址（列表的方式），邮件主题，邮件html内容
@@ -142,22 +140,88 @@ def check_network():
             time.sleep(5)
     return True
 
-#获取本级制定接口的ip地址
+if  __name__ == '__main__' :
+    check_network()
+    message = os.popen('ifconfig -a').readlines()
+	print(message)
+    sendEmail("smtp.126.com",'xxx','xxx','xxx@126.com',['12345678@qq.com'],'IP Address of Raspberry PI',str(message))
+	</pre>
+	<p>设置开机自启脚本：<ul><li>sudo vim /etc/rc.local</li><li>添加python3 /home/pi/code/send_ip.py</li></ul></p>
+	<p>2018.07.14：</p>
+	<p>利用正则表达式提取ip地址；测试ipv6下发送gmail失败；增加备用发送邮件。代码如下</p>
+	<pre>
+#!\usr\bin\env python
+#-*-coding: utf-8-*-
+import os
+import re
+import smtplib
+import urllib
+import urllib.request
+from email.mime.text import MIMEText
+
+#发送邮件的基本函数，参数依次如下
+# smtp服务器地址、邮箱用户名，邮箱秘密，发件人地址，收件地址（列表的方式），邮件主题，邮件html内容
+def sendEmail(mail_host,mail_user,mail_pass,sender,mailto_list,subject,msghtml):
+    me="MRPi"+"<"+sender+">"
+    msg = MIMEText(msghtml,_subtype='plain')
+    msg['Subject'] = subject
+    msg['From'] = me
+    msg['To'] = ";".join(mailto_list)                #将收件人列表以‘；’分隔
+    try:
+        server = smtplib.SMTP()
+        server.connect(mail_host)                            #连接服务器
+        server.starttls()                                  #gmail need!
+        server.login(mail_user,mail_pass)               #登录操作
+        server.sendmail(me, mailto_list, msg.as_string())
+        server.close()
+        return (True)
+    except Exception as e:
+        print(e)
+        return (False)
+
+#检查网络连通性
+def check_network():
+    while True:
+        try:
+            page=urllib.request.urlopen('http://baidu.com')
+            html=page.read()
+            print ("Network is Ready!")
+            break
+        except Exception as e:
+            print(e)
+            print ("Network is not ready,Sleep 5s...")
+            #try:
+            #    page2=urllib.request.urlopen('https://www.google.com.hk')
+            #    html2=urllib
+            #    print ("Networkipv6 is Ready!")
+            #    break
+            #except Exception as e2:
+            #    print(e2)
+            #    print ("Networkipv6 is not ready")
+            time.sleep(5)
+    return True
+
 def get_ip_address():
-    s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    s.connect(("1.1.1.1",80))
-    ipaddr=s.getsockname()[0]
-    s.close()
+    message = os.popen('ifconfig -a').readlines()
+    #print(message)
+    ipaddr = re.findall(r'[i][n][e][t].\d+\.\d+\.\d+\.\d+',str(message))
     return ipaddr
 
 if  __name__ == '__main__' :
     check_network()
-    ipaddr= get_ip_address()
-    print (ipaddr)
-    sendEmail("smtp.126.com",'xxx','xxx','xxx@126.com',['12345678@qq.com'],'IP Address of Raspberry PI',ipaddr)
+    ipaddr = get_ip_address()
+    print(ipaddr)
+    while True:
+        if(sendEmail("smtp.126.com",'xxx','xxx','xxx@126.com',['12345678@qq.com'],'IP Address of Raspberry PI',str(ipaddr))):
+            print('mail1')
+            break
+        else:
+            if(sendEmail("smtp.gmail.com",'xxx','xxx','xxx@gmail.com',['12345678@qq.com'],'IP Address of Raspberry PI',str(ipaddr))):
+                print('mail2')
+                break
+        time.sleep(5)
+        
 	</pre>
-	<p>设置开机自启脚本：<ul><li>sudo vim /etc/rc.local</li><li>添加python3 /home/pi/code/send_ip.py</li></ul></p>
-	
 <p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
 <ul class="icons">
 	<li><a href="../乌有之乡.html"><span class="label">back</span></a></li>
