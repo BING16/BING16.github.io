@@ -56,7 +56,8 @@
 	视频存在较大延迟；除笔记本网线直连的情况下，存在外网可访问的安全性问题。</br>
 	杀死进程：sudo killall -TERM motion</br>
 	启动视频程序：sudo service motion start &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sudo motion</p>
-	</div>
+	<p>2018.07.14：</p>
+	<p>增加相应的开关python程序。</p>
 	<h2>利用Python3使树莓派自动发送邮件</h2>
 	<p>2018.07.13：</p>
 	<p>相关代码为</p>
@@ -148,7 +149,7 @@ if  __name__ == '__main__' :
 	</pre>
 	<p>设置开机自启脚本：<ul><li>sudo vim /etc/rc.local</li><li>添加python3 /home/pi/code/send_ip.py</li></ul></p>
 	<p>2018.07.14：</p>
-	<p>利用正则表达式提取ip地址；测试ipv6下发送gmail失败；增加备用发送邮件。代码如下</p>
+	<p>利用正则表达式提取ip地址（使用方法参考廖雪峰的教程/这么多表达式刚学的我记不得啊：https://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/00143193331387014ccd1040c814dee8b2164bb4f064cff000）；测试ipv6下发送gmail失败（后来发现是自启动代码出错的问题，且惊奇地发现ipv6下shell和vnc可用，但似乎仅限于连接端也为ipv6/或局域网内）；增加备用发送邮件。代码如下</p>
 	<pre>
 #!\usr\bin\env python
 #-*-coding: utf-8-*-
@@ -222,7 +223,87 @@ if  __name__ == '__main__' :
         time.sleep(5)
 	</pre>
 	<p>再次测试后存在开机无法自动运行的情况，参考https://blog.csdn.net/chenyefei/article/details/78076076的方案二重新设置即可。</p>
-<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+	<p>如前文所述，再次测试后发现ipv6校园网下确实能够通过python3来发送gmail邮件。但是由于未登录ipv4端，测试网络以及尝试使用126邮件发送邮件时存在程序卡在某一步的情况。</p>
+	<p>增加超时限制语句，测试发现其不影响time.sleep()的使用：</p>
+	<pre>
+#!\usr\bin\env python
+#-*-coding: utf-8-*-
+import os
+import re
+import socket
+import smtplib
+import urllib
+import urllib.request
+from email.mime.text import MIMEText
+
+#发送邮件的基本函数，参数依次如下
+# smtp服务器地址、邮箱用户名，邮箱秘密，发件人地址，收件地址（列表的方式），邮件主题，邮件html内容
+def sendEmail(mail_host,mail_user,mail_pass,sender,mailto_list,subject,msghtml):
+    me="MRPi"+"<"+sender+">"
+    msg = MIMEText(msghtml,_subtype='plain')
+    msg['Subject'] = subject
+    msg['From'] = me
+    msg['To'] = ";".join(mailto_list)                #将收件人列表以‘；’分隔
+    try:
+        server = smtplib.SMTP()
+        server.connect(mail_host)                            #连接服务器
+        server.starttls()                                  #gmail need!
+        server.login(mail_user,mail_pass)               #登录操作
+        server.sendmail(me, mailto_list, msg.as_string())
+        server.close()
+        return (True)
+    except Exception as e:
+        print(e)
+        return (False)
+
+#检查网络连通性
+def check_network():
+    while True:
+        try:
+            page=urllib.request.urlopen('http://baidu.com')
+            html=page.read()
+            print ("Network is Ready!")
+            break
+        except Exception as e:
+            print(e)
+            print ("Network is not ready,Sleep 5s...")
+            try:
+                page2=urllib.request.urlopen('https://www.google.com.hk')
+                html2=urllib
+                print ("Networkipv6 is Ready!")
+                break
+            except Exception as e2:
+                print(e2)
+                print ("Networkipv6 is not ready")
+            time.sleep(5)
+    return True
+
+def get_ip_address():
+    message = os.popen('ifconfig -a').readlines()
+    #print(message)
+    ipaddr = re.findall(r'[i][n][e][t].\d+\.\d+\.\d+\.\d+',str(message))
+    return ipaddr
+
+if  __name__ == '__main__' :
+	socket.setdefaulttimeout(6)      #超时限制
+    check_network()
+    ipaddr = get_ip_address()
+    print(ipaddr)
+    while True:
+        if(sendEmail("smtp.126.com",'xxx','xxx','xxx@126.com',['12345678@qq.com'],'IP Address of Raspberry PI',str(ipaddr))):
+            print('mail1')
+            break
+        else:
+            if(sendEmail("smtp.gmail.com",'xxx','xxx','xxx@gmail.com',['12345678@qq.com'],'IP Address of Raspberry PI',str(ipaddr))):
+                print('mail2')
+                break
+        time.sleep(5)
+	</pre>
+	<h2>人脸识别</h2>
+	<p>2018.07.15：</p>
+	<p>python3的cv2好像用不了？不幸的，MRPi好像因为进水短路出现了问题，正在返修中。</p>
+	<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+	</div>
 <ul class="icons">
 	<li><a href="../乌有之乡.html"><span class="label">back</span></a></li>
 					</ul>
