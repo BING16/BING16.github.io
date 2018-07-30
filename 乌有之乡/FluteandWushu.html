@@ -32,10 +32,13 @@
 				<li>硬件实现</li>
 			</ul>
 			</p>
-		<p>通过前期的粗略资料了解到Arduino信号采集频似乎不满足对声音频率分析的要求，因而目前考虑使用麦克风录Python分析的方案。</p>
-		<p>目前找到了一段分析声音频谱程序，再通过下载各音阶的WA文件比对学习。</p>
+		<p>通过前期的粗略资料了解到Arduino信号采集频似乎不满足对声音频率分析的要求，因而目前考虑使用麦克风录、Python分析的方案。</p>
+		<p>目前找到了一段分析声音频谱程序，再通过下载各音阶的WAV文件比对学习。</p>
 		<ul><li>
-		<p>打开WAV及绘制波形图的方法如下，参考自<br>https://www.cnblogs.com/lzxwalex/p/6922099.html：</p>
+		<p>打开WAV及绘制波形图的方法如下，参考自<br>
+			https://www.cnblogs.com/lzxwalex/p/6922099.html，<br>
+			https://blog.csdn.net/yaningli/article/details/80211777，<br>
+			https://blog.csdn.net/jeffrey2010/article/details/77427451/：</p>
 			</li></ul>
 		<pre>
 import wave
@@ -48,9 +51,10 @@ def wavread(path):
 	wavfile =  wave.open(path,"rb")   #--利用wave库的只读方式打开文件
 	params = wavfile.getparams()   #--获取wav文件的参数（以tuple形式输出），依次为(声道数，采样精度，采样率，帧数，......)
 	datawav = wavfile.readframes(params[3])   #--得到每一帧的声音数据，其形式为‘左右左右’依次混合排列，返回的值是二进制数据，在python中用字符串表示二进制数据
+	framerate = wavfile.getframerate()
 	wavfile.close()
 	
-	return np, datawav, params
+	return np, datawav, params, framerate
 
 def Plot_At(np, datawav, params):
 	#--绘制波形图
@@ -67,11 +71,13 @@ def Plot_At(np, datawav, params):
 	if params[0]==2:   #--判断声道数
 		wavdata.shape = -1,2   #--通过shape先改变矩阵的形状使数据变为两列分别为左右声道
 		wavdata = wavdata.T   #--通过转置得到最终数据
+		
 		plt.title("Night.wav's Frames")
 		plt.subplot(211)   #--（’行数‘‘列数’‘左到右上到下的顺序数’）
 		plt.xlabel("Time(s)")
 		plt.ylabel("Amplitude")
 		plt.plot(wavtime, wavdata[0], color = 'green')   #--（x，y，颜色）
+		
 		plt.subplot(212)
 		plt.xlabel("Time(s)")
 		plt.ylabel("Amplitude")
@@ -95,60 +101,42 @@ def Plot_ft(np, datawav, params):
 	plt.xlabel('Time(s)')
 	plt.show()
 	
-def Plot_fs(np, datawav, params):
-	#--测试频率依次为290，324，
-	if params[0]==2:   #--判断声道数
-		wavdata = np.fromstring(datawav,dtype = np.short)
+def Plot_fs(np, datawav, params, framerate):
+	#--测试频率依次为29.004, 30.004, 32.004, 251031, 
+	N = framerate
+	start = 0 #开始采样位置
+	df = params[2]/(N-1) # 分辨率
+	freq = [df*n for n in range(0,N)] #N个元素
+	wavdata = np.fromstring(datawav,dtype = np.short)
+	
+	if params[0] == 2:   #--判断声道数
 		wavdata.shape = -1,2   #--通过shape先改变矩阵的形状使数据变为两列分别为左右声道
 		wavdata = wavdata.T   #--通过转置得到最终数据
-	
-		N=44100
-		start=0 #开始采样位置
-		df = params[2]/(N-1) # 分辨率
-		freq = [df*n for n in range(0,N)] #N个元素
-		wave_data2=wavdata[0][start:start+N]
-		c=numpy.fft.fft(wave_data2)*2/N
-		#常规显示采样频率一半的频谱
-		d=int(len(c)/2)
-		a=0
-		#仅显示频率在4000以下的频谱
-		while freq[d]>2000:
-			d -= 10
-		while freq[a]<20:
-			a += 10
-		
-		print(freq[np.argmax(c[a:d-1])+a])   #--占比最大的频率（近似于似乎与画图的结果偏差在3Hz内）
-		#print(freq[c[a:d-1].index(max(c[a:d-1]))])
-		pylab.plot(freq[a:d-1],abs(c[a:d-1]),'r')
-		pylab.show()
+		wave_data2 = wavdata[0][start:start+N]
 	else:
-		wavdata = np.fromstring(datawav,dtype = np.short)
-		N=44100
-		start=0 #开始采样位置
-		df = params[2]/(N-1) # 分辨率
-		freq = [df*n for n in range(0,N)] #N个元素
-		wave_data2=wavdata[start:start+N]
-		c=numpy.fft.fft(wave_data2)*2/N
-		#常规显示采样频率一半的频谱
-		d=int(len(c)/2)
-		a=0
-		#仅显示频率在4000以下的频谱
-		while freq[d]>2000:
-			d -= 10
-		while freq[a]<20:
-			a += 10
+		wave_data2 = wavdata[start:start+N]
 		
-		print(freq[np.argmax(c[a:d-1])+a])   #--占比最大的频率（近似于似乎与画图的结果偏差在3Hz内）
-		#print(freq[c[a:d-1].index(max(c[a:d-1]))])
-		pylab.plot(freq[a:d-1],abs(c[a:d-1]),'r')
-		pylab.show()
+	c = numpy.fft.fft(wave_data2)*2/N
+	#常规显示采样频率一半的频谱
+	d = int(len(c)/2)
+	a = 0
+	#仅显示频率在4000以下的频谱,此处有所修改
+	while freq[d] > 4000:
+		d -= 10
+	while freq[a] < 20:
+		a += 10
+	
+	print(freq[np.argmax(abs(c[a:d-1]))+a])   #--占比最大的频率（近似于似乎与画图的结果偏差在3Hz内）
+	#print(freq[c[a:d-1].index(max(c[a:d-1]))])
+	pylab.plot(freq[a:d-1],abs(c[a:d-1]),'r')
+	pylab.show()
 
 def main():
-	np, datawav, params = wavread('/home/qbj//test.wav')
-	#np, datawav, params = wavread('/home/qbj//音乐/1.wav')
+	#np, datawav, params, framerate = wavread('/home/qbj//test.wav')
+	np, datawav, params, framerate = wavread('/home/qbj/1/export/会话.wav')
 	Plot_At(np, datawav, params)
 	Plot_ft(np, datawav, params)
-	Plot_fs(np, datawav, params)
+	Plot_fs(np, datawav, params, framerate)
 	
 main()
 		</pre>
