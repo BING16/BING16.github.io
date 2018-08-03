@@ -126,7 +126,7 @@ def Plot_fs(np, datawav, params, framerate):
 	while freq[a] < 20:
 		a += 10
 	
-	print(freq[np.argmax(abs(c[a:d-1]))+a])   #--占比最大的频率（近似于似乎与画图的结果偏差在3Hz内）
+	print(freq[np.argmax(abs(c[a:d-1]))+a])
 	#print(freq[c[a:d-1].index(max(c[a:d-1]))])
 	pylab.plot(freq[a:d-1],abs(c[a:d-1]),'r')
 	pylab.show()
